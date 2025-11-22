@@ -3,6 +3,7 @@
 mod tests {
     use mollusk_svm::*;
     use solana_sdk::account::Account;
+    use solana_sdk::message::AccountMeta;
     use solana_sdk::native_token::LAMPORTS_PER_SOL;
     use solana_sdk::pubkey::Pubkey;
     use solana_sdk::pubkey;
@@ -11,6 +12,7 @@ mod tests {
 
     const ID: Pubkey = pubkey!("pinzWHbUW7wQ16XcWcEjw4fucktuoHCnBfbbGB93PFo");
     const ALICE: Pubkey = Pubkey::new_from_array([0x01; 32]);
+    const BOB: Pubkey = Pubkey::new_from_array([0x02; 32]);
 
     #[test]
     fn initialize() {
@@ -27,6 +29,11 @@ mod tests {
         let state_account = Account::new(0,0, &system_program);
         
         // Get account meta
+        let ix_accs = vec![
+            AccountMeta::new(ALICE, true),
+            AccountMeta::new(ALICE, true),
+
+        ];
 
         // Data
 
