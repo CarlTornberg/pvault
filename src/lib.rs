@@ -1,18 +1,28 @@
 use pinocchio::{
-  account_info::AccountInfo,
-  entrypoint,
-  msg,
-  ProgramResult,
-  pubkey::Pubkey
+    account_info::AccountInfo, entrypoint, msg, program_error::ProgramError, pubkey::Pubkey, ProgramResult
 };
+use pinocchio_pubkey::declare_id;
+mod handlers;
 
 entrypoint!(process_instruction);
 
+declare_id!("11111111111111111111111111111111");
+
 pub fn process_instruction(
-  program_id: &Pubkey,
-  accounts: &[AccountInfo],
-  instruction_data: &[u8],
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    instruction_data: &[u8],
 ) -> ProgramResult {
-  msg!("Hello from my program!");
-  Ok(())
+    if program_id != &ID { return Err(ProgramError::IncorrectProgramId); }
+
+    let [inst, data @ ..] = instruction_data else {
+        return Err(ProgramError::InvalidInstructionData);
+    };
+
+    match inst {
+        0 => {},
+        _ => return Err(ProgramError::InvalidInstructionData),
+    }
+
+    Ok(())
 }
