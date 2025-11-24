@@ -1,8 +1,14 @@
 use pinocchio::{
-    account_info::AccountInfo, entrypoint, msg, program_error::ProgramError, pubkey::Pubkey, ProgramResult
+    account_info::AccountInfo, entrypoint, program_error::ProgramError, pubkey::Pubkey, ProgramResult
 };
 use pinocchio_pubkey::declare_id;
-mod handlers;
+
+mod processors;
+mod states;
+mod utils;
+pub use processors::*;
+pub use states::*;
+pub use utils::*;
 
 entrypoint!(process_instruction);
 
@@ -15,14 +21,13 @@ pub fn process_instruction(
 ) -> ProgramResult {
     if program_id != &ID { return Err(ProgramError::IncorrectProgramId); }
 
-    let [inst, data @ ..] = instruction_data else {
+    let [discr, data @ ..] = instruction_data else {
         return Err(ProgramError::InvalidInstructionData);
     };
 
-    match inst {
-        0 => {},
-        _ => return Err(ProgramError::InvalidInstructionData),
+    match discr {
+        InitializeProc::DISCRIMINATOR => 
+            { InitializeProc::try_from((data, accounts))?.process() },
+        _ => Err(ProgramError::InvalidInstructionData),
     }
-
-    Ok(())
 }
