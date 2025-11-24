@@ -3,6 +3,16 @@ name = "pvault"
 version = "0.1.0"
 edition = "2021"
 
+no-entrypoint = []
+test-sbf = [] # Wraps all tests under cargo test-sbf
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = [
+  'cfg(feature, values("custom-heap", "custom-panic"))',
+  'cfg(target_os, values("solana"))',
+]
+
 [lib]
 crate-type = ["cdylib", "lib"]
 
@@ -14,7 +24,12 @@ pinocchio-system = "0.4.0"
 
 [dev-dependencies]
 mollusk-svm = "0.7.2"
+mollusk-svm-bencher = "0.7.2"
 solana-sdk = "3.0.0"
+
+[[bench]]
+name = "compute_units"
+harness = false
 
 # To build:
 # $ cargo update --precise 1.6.0 -p base64ct@1.8.0 # Downgrade base64ct in solana-sdk 3.0.0
