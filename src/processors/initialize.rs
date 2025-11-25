@@ -1,5 +1,7 @@
-use pinocchio::{ProgramResult, account_info::AccountInfo, instruction::{AccountMeta, Instruction}, program_error::ProgramError, pubkey::Pubkey, sysvars::{Sysvar, rent::Rent}};
+use pinocchio::{ProgramResult, account_info::AccountInfo, msg, program_error::ProgramError, pubkey::find_program_address, sysvars::{Sysvar, rent::Rent}};
 use pinocchio_system::instructions::CreateAccount;
+
+use crate::Vault;
 
 pub const DISCRIMINATOR: u8 = 0;
 
@@ -19,26 +21,27 @@ pub struct InitializeAccounts<'a> {
     pub vault: &'a AccountInfo,
 }
 
-impl<'a> InitializeAccounts<'a> {
-    pub fn as_array(&'a self) -> [&'a Pubkey; 3] {
-        [self.authority.key(), self.vault_data.key(), self.vault.key()]
-    }
-}
-
 #[repr(C)]
 pub struct InitializeInstructionData<'a> {
     pub locked: &'a bool,
 }
 
 impl<'a> InitializeInstructionData<'a> {
-    pub fn pack(&'a self) -> [u8; 2] {
-        [DISCRIMINATOR, *self.locked as u8]
+    /// # Safety
+    pub unsafe fn pack(&self) -> &[u8] {
+        core::slice::from_raw_parts(
+            (self as *const Self) as *const u8,
+            core::mem::size_of::<Self>()
+        )
+    }
+    
+    pub fn get_packed_instruction_data(locked: bool) -> [u8; 1] {
+        [locked as u8]
     }
 }
 
 impl<'a> Initialize<'a> {
     pub fn process(&'a self) -> ProgramResult {
-
         let space = core::mem::size_of::<InitializeInstructionData>();
         let rent = Rent::get()?.minimum_balance(space);
 
@@ -47,9 +50,26 @@ impl<'a> Initialize<'a> {
             to: self.accounts.vault_data,
             lamports: rent,
             space: space as u64,
+            owner: &crate::ID,
+        }.invoke()?;
+        msg!("Vault data created");
+
+        CreateAccount {
+            from: self.accounts.authority,
+            to: self.accounts.vault,
+            lamports: Rent::get()?.minimum_balance(0),
+            space: 0,
             owner: &pinocchio_system::ID,
         }.invoke()?;
-        
+        msg!("Vault created");
+
+        if let Ok(mut data) = self.accounts.vault_data.try_borrow_mut_data() {
+            let new_data = unsafe { self.instruction_data.pack() };
+            data.copy_from_slice(new_data);
+            msg!("Vault data set:");
+        }
+        else { return Err(ProgramError::AccountBorrowFailed); }
+
         Ok(())
     }
 }
@@ -71,10 +91,19 @@ impl<'a> TryFrom<(&'a [u8], &'a [AccountInfo])> for Initialize<'a> {
             return Err(ProgramError::MissingRequiredSignature);
         }
 
+        let (vault_data, _vault_data_bump) = Vault::get_vault_data_pda(accounts.authority.key());
+        if !accounts.vault_data.key().eq(&vault_data) {
+            return Err(ProgramError::InvalidSeeds);
+        }
+
         if accounts.vault_data.lamports() != 0 {
             return Err(ProgramError::AccountAlreadyInitialized);
         }
 
+        let (vault, _vault_bump) = Vault::get_vault_pda(accounts.authority.key());
+        if !accounts.vault.key().eq(&vault) {
+            return Err(ProgramError::InvalidSeeds);
+        }
         if accounts.vault.lamports() != 0 {
             return Err(ProgramError::AccountAlreadyInitialized);
         }
