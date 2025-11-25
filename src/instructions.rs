@@ -35,4 +35,3 @@ impl<'a> TryFrom<&'a &[u8]> for Instruction<'a> {
     }
 }
 
-
