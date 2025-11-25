@@ -1,4 +1,4 @@
-use pinocchio::{ProgramResult, account_info::AccountInfo, msg, program_error::ProgramError, pubkey::find_program_address, sysvars::{Sysvar, rent::Rent}};
+use pinocchio::{ProgramResult, account_info::AccountInfo, msg, program_error::ProgramError, sysvars::{Sysvar, rent::Rent}};
 use pinocchio_system::instructions::CreateAccount;
 
 use crate::Vault;
