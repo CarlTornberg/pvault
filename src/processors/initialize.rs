@@ -1,4 +1,4 @@
-use pinocchio::{ProgramResult, account_info::AccountInfo, msg, program_error::ProgramError, sysvars::{Sysvar, rent::Rent}};
+use pinocchio::{ProgramResult, account_info::AccountInfo, msg, program_error::ProgramError, pubkey, sysvars::{Sysvar, rent::Rent}};
 use pinocchio_system::instructions::CreateAccount;
 
 use crate::Vault;
@@ -66,7 +66,7 @@ impl<'a> Initialize<'a> {
         if let Ok(mut data) = self.accounts.vault_data.try_borrow_mut_data() {
             let new_data = unsafe { self.instruction_data.pack() };
             data.copy_from_slice(new_data);
-            msg!("Vault data set:");
+            msg!("Vault data set");
         }
         else { return Err(ProgramError::AccountBorrowFailed); }
 
@@ -92,7 +92,7 @@ impl<'a> TryFrom<(&'a [u8], &'a [AccountInfo])> for Initialize<'a> {
         }
 
         let (vault_data, _vault_data_bump) = Vault::get_vault_data_pda(accounts.authority.key());
-        if !accounts.vault_data.key().eq(&vault_data) {
+        if !pubkey::pubkey_eq(accounts.vault_data.key(), &vault_data) {
             return Err(ProgramError::InvalidSeeds);
         }
 
@@ -101,7 +101,7 @@ impl<'a> TryFrom<(&'a [u8], &'a [AccountInfo])> for Initialize<'a> {
         }
 
         let (vault, _vault_bump) = Vault::get_vault_pda(accounts.authority.key());
-        if !accounts.vault.key().eq(&vault) {
+        if !pubkey::pubkey_eq(accounts.vault.key(), &vault) {
             return Err(ProgramError::InvalidSeeds);
         }
         if accounts.vault.lamports() != 0 {
