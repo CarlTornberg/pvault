@@ -1,18 +1,18 @@
 use pinocchio::{
-    account_info::AccountInfo, entrypoint, program_error::ProgramError, pubkey::Pubkey, ProgramResult
+    ProgramResult, account_info::AccountInfo, entrypoint, program_error::ProgramError, pubkey::Pubkey
 };
 use pinocchio_pubkey::declare_id;
 
 mod processors;
+mod instructions;
 mod states;
-mod utils;
 pub use processors::*;
+pub use instructions::*;
 pub use states::*;
-pub use utils::*;
 
 entrypoint!(process_instruction);
 
-declare_id!("11111111111111111111111111111111");
+declare_id!("pinzWHbUW7wQ16XcWcEjw4fucktuoHCnBfbbGB93PFo");
 
 pub fn process_instruction(
     program_id: &Pubkey,
@@ -26,8 +26,8 @@ pub fn process_instruction(
     };
 
     match discr {
-        InitializeProc::DISCRIMINATOR => 
-            { InitializeProc::try_from((data, accounts))?.process() },
+        &initialize::DISCRIMINATOR => 
+            { Initialize::try_from((data, accounts))?.process() },
         _ => Err(ProgramError::InvalidInstructionData),
     }
 }
