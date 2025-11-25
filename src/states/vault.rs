@@ -11,18 +11,18 @@ pub struct Vault {
 impl Vault {
     pub const DISCRIMINATOR: u8 = 0;
 
-    pub const VAULT_SEED: &str = "vault";
-    pub const VAULT_DATA_SEED: &str = "vault_data";
+    pub const VAULT_SEED: &[u8] = b"vault";
+    pub const VAULT_DATA_SEED: &[u8] = b"vault_data";
 
     /// Discriminator + data size
     pub const ON_CHAIN_SIZE: usize = core::mem::size_of::<u8>() + core::mem::size_of::<Self>();
 
-    pub fn get_vault_pda(authority: &AccountInfo) -> (Pubkey, u8) {
-        pubkey::find_program_address(&[Self::VAULT_SEED.as_bytes(), authority.key()], &crate::ID)
+    pub fn get_vault_pda(authority: &Pubkey) -> (Pubkey, u8) {
+        pubkey::find_program_address(&[Self::VAULT_SEED, authority], &crate::ID)
     }
 
-    pub fn get_vault_data_pda(authority: &AccountInfo) -> (Pubkey, u8) {
-        pubkey::find_program_address(&[Self::VAULT_DATA_SEED.as_bytes(), authority.key()], &crate::ID)
+    pub fn get_vault_data_pda(authority: &Pubkey) -> (Pubkey, u8) {
+        pubkey::find_program_address(&[Self::VAULT_DATA_SEED, authority], &crate::ID)
     }
 }
 
