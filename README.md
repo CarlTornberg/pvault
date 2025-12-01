@@ -1,5 +1,3 @@
-# pvault
-Nocopy lightweight Pinocchio based vault
 
 # Create project
 ```bash
@@ -10,35 +8,66 @@ cargo add pinocchio pinocchio-system pinocchio-log pinocchio-pubkey
 
 # Update Cargo.toml
 ```toml
+[package]
+name = "pime"
+version = "0.1.0"
+edition = "2021"
+
+no-entrypoint = []
+test-sbf = [] # Wraps all tests under cargo test-sbf
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = [
+  'cfg(feature, values("custom-heap", "custom-panic"))',
+  'cfg(target_os, values("solana"))',
+]
+
 [lib]
-crate-type = ["lib", "cdylib"]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+pinocchio = "0.9.2"
+pinocchio-log = "0.5.1"
+pinocchio-pubkey = "0.3.0"
+pinocchio-system = "0.4.0"
+
+[dev-dependencies]
+mollusk-svm = "0.7.2"
+mollusk-svm-bencher = "0.7.2"
+solana-sdk = "3.0.0"
+
+[[bench]]
+name = "compute_units"
+harness = false
+
 ```
 
 # Boilerplate in lib.rs
 ```rust
 #![no_std]
 use pinocchio::{
-  account_info::AccountInfo,
-  entrypoint,
-  msg,
-  ProgramResult,
-  pubkey::Pubkey
+  ProgramResult, account_info::AccountInfo, entrypoint, msg, program_error::ProgramError, pubkey::Pubkey
 };
 use pinocchio_pubkey::declare_id;
 
 entrypoint!(process_instruction);
-declare_id!("YOUR_PROGRAM_PUBKEY");
+declare_id!("11111111111111111111111111111111");
 
 pub fn process_instruction(
   program_id: &Pubkey,
   accounts: &[AccountInfo],
   instruction_data: &[u8],
 ) -> ProgramResult {
-    let (inst, data @ ..) = instruction_data else {
-        return Err(....);
-    }
+
+
+    let [inst, data @ ..] = instruction_data else {
+        return Err(ProgramError::InvalidInstructionData);
+    };
+
     match inst {
-        _ => msg!("Hello from my program!");
+        0 => msg!("This is the first instruction"),
+        _ => msg!("Hello from my program!"),
     }
   Ok(())
 }
